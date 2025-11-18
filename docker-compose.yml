@@ -1,0 +1,87 @@
+version: '3.9'
+
+services:
+  # ---------- DATABASES ----------
+  user-db:
+    image: postgres:15
+    container_name: user-db
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: useruser
+      POSTGRES_PASSWORD: userpass
+    ports:
+      - "5434:5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+
+  book-db:
+    image: postgres:15
+    container_name: book-db
+    environment:
+      POSTGRES_DB: bookdb
+      POSTGRES_USER: bookuser
+      POSTGRES_PASSWORD: bookpass
+    ports:
+      - "5433:5432"
+    volumes:
+      - book-db-data:/var/lib/postgresql/data
+
+  borrow-db:
+    image: postgres:15
+    container_name: borrow-db
+    environment:
+      POSTGRES_DB: borrowdb
+      POSTGRES_USER: borrowuser
+      POSTGRES_PASSWORD: borrowpass
+    ports:
+      - "5435:5432"
+    volumes:
+      - borrow-db-data:/var/lib/postgresql/data
+
+  userservice:
+    build:
+      context: ./userservice
+      dockerfile: Dockerfile
+    container_name: userservice
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/userdb
+      SPRING_DATASOURCE_USERNAME: useruser
+      SPRING_DATASOURCE_PASSWORD: userpass
+    depends_on:
+      - user-db
+
+  bookservice:
+    build:
+      context: ./bookservice
+      dockerfile: Dockerfile
+    container_name: bookservice
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://book-db:5432/bookdb
+      SPRING_DATASOURCE_USERNAME: bookuser
+      SPRING_DATASOURCE_PASSWORD: bookpass
+    depends_on:
+      - book-db
+
+  borrowservice:
+    build:
+      context: ./borrowservice
+    container_name: borrowservice
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://borrow-db:5432/borrowdb
+      SPRING_DATASOURCE_USERNAME: borrowuser
+      SPRING_DATASOURCE_PASSWORD: borrowpass
+    depends_on:
+      - borrow-db
+      - userservice
+      - bookservice
+
+volumes:
+  user-db-data:
+  book-db-data:
+  borrow-db-data:
